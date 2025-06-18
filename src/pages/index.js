@@ -29,6 +29,7 @@ export default function Home() {
   const [resultados, setResultados] = useState([]);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState(null);
+  const [token, setToken] = useState('');
 
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -38,14 +39,22 @@ export default function Home() {
     setResultados([]);
 
     try {
-      const res = await fetch('/api/cotas');
+      const res = await fetch('/api/cotas', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       if (!res.ok) throw new Error(`Erro ${res.status}`);
       const data = await res.json();
       setCotas(data);
 
       const resultadosTemp = [];
       for (const item of data) {
-        const quotaRes = await fetch(`/api/quota?cota=${item.idCota}`);
+        const quotaRes = await fetch(`/api/quota?cota=${item.idCota}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         if (quotaRes.ok) {
           const quotaData = await quotaRes.json();
           resultadosTemp.push(quotaData);
@@ -63,6 +72,13 @@ export default function Home() {
   return (
     <div className="p-6 font-sans bg-white text-black min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Consulta de Cotas</h1>
+       <textarea
+        placeholder="Cole aqui o Bearer Token"
+        value={token}
+        onChange={(e) => setToken(e.target.value)}
+        className="w-full p-2 mb-4 border rounded text-xs font-mono h-24"
+      />
+    
       <button
         onClick={listarCotas}
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -87,13 +103,13 @@ export default function Home() {
       {erro && <p className="mt-4 text-red-600">❌ Erro: {erro}</p>}
 
       {resultados.length > 0 && (
-        <div className="grid grid-cols-4 gap-2 mt-6">
+        <div className="grid grid-cols-1 gap-2 mt-6">
           {resultados.slice(-1).map((r, idx) => (
             <div
               key={idx}
-              className="bg-white p-4 rounded shadow border border-gray-800"
+              className="bg-white min-w-full p-4 rounded shadow border border-gray-800"
             >
-              <pre className="text-[0.75rem] whitespace-pre-wrap break-words">
+              <pre className="text-[0.75rem] w-full whitespace-pre-wrap break-words">
                 {JSON.stringify(r, null, 2)}
               </pre>
             </div>
